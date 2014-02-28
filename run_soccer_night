@@ -1,0 +1,2 @@
+#! /bin/sh
+PYTHONPATH=$PYTHONPATH:$PWD/soccer_night ./run.py
