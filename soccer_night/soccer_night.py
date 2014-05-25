@@ -9,6 +9,8 @@ from selenium.webdriver.support import expected_conditions
 import time
 import re
 
+#from auto_collect import AutoCollector
+
 IMPLICITLY_WAIT_SECONDS = 2
 EXPLICITLY_WAIT_SECONDS = 5
 
