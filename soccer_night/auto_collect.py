@@ -1,14 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
+
 class AutoCollector:
     BUTTON_1000_XPATH = '//li[@data-prodid="prplr_basic_lv1"]'
     BUTTON_AUTO_BUY_ID = 'auto_buy_button'
     LINK_TEXT_NOT_ENOUGH_SQUAD = '선수관리로 이동'
     POPUP_CONFIRM_ID = 'a_popup_ok'
     ROW_UNLOCK_CSS ='span.unlock'
+    CONFIG_PATH = '../config.json'
 
     def __init__(self, driver, wait, option=None):
+        if os.path.isfile(self.CONFIG_PATH):
+            import simplejson as json
+            config = json.loads(open(self.CONFIG_PATH).read())
+            self.collectee = config['auto-collect']['collectee']
+            for s in self.collectee:
+                print s
 #        available options..
 #        cleaning policy (which players to practice or sell?)
 #        buying policy (only 9000, only 1000, only 9000 when live card season, etc..)
@@ -62,13 +71,35 @@ class AutoCollector:
         self.driver.get('http://fd.naver.com/gmc/main#manageplayer')
         time.sleep(2)
         elems = self.driver.find_elements_by_css_selector(self.ROW_UNLOCK_CSS)
-        print len(elems)
+#        print len(elems)
+
+        collect = []
         for lock_icon in elems:
             tr = lock_icon.find_element_by_xpath('../..')
-            print tr.find_element_by_css_selector('td._name strong').get_attribute('innerHTML'),
-            print tr.find_element_by_css_selector('td._curPos span').get_attribute('innerHTML'),
-            print tr.find_element_by_css_selector('td._lv span').get_attribute('innerHTML'),
-            print tr.find_element_by_css_selector('td._mteamNo span').get_attribute('innerHTML')
+            team_name = tr.find_element_by_css_selector('td._mteamNo span').get_attribute('innerHTML')
+            player_name = tr.find_element_by_css_selector('td._name strong').get_attribute('innerHTML')
+            level = tr.find_element_by_css_selector('td._lv span').get_attribute('innerHTML')
+#            print '[', team_name, ']'
+#            print '[', player_name, ']'
+#            print '[', level, ']'
+            if team_name in self.collectee:
+                collect += [tr]
+                print 'collect [%s] %s(lv %s)'%(team_name, player_name, level)
+            else:
+                y_or_n = ''
+                while y_or_n.lower() not in ('y', 'n'):
+                    y_or_n = raw_input('collect? [%s] %s(lv %s) [y/n]'%(team_name.encode('utf8'), player_name.encode('utf8'), level.encode('utf8')))
+
+                if y_or_n is 'y':
+                    collect += [tr]
+                    print 'collect [%s] %s(lv %s)'%(team_name, player_name, level)
+                else:
+                    pass # lock him.
+#            print tr.find_element_by_css_selector('td._name strong').get_attribute('innerHTML'),
+#            print tr.find_element_by_css_selector('td._curPos span').get_attribute('innerHTML'),
+#            print tr.find_element_by_css_selector('td._lv span').get_attribute('innerHTML'),
+#            print tr.find_element_by_css_selector('td._mteamNo span').get_attribute('innerHTML')
+
 #        return when cleaning is done
 #        sell or practice as possible
         pass
@@ -105,6 +136,7 @@ if __name__ == '__main__':
         id = raw_input("Enter id: ")
         pw = getpass()
         a.login(id, pw)
+        time.sleep(3)
         a.buy_until_possible()
         time.sleep(3)
         a.clean_up_entry()
