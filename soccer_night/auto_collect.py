@@ -14,8 +14,8 @@ class AutoCollector:
     def __init__(self, driver, wait, option=None):
         if os.path.isfile(self.CONFIG_PATH):
             import simplejson as json
-            config = json.loads(open(self.CONFIG_PATH).read())
-            self.collectee = config['auto-collect']['collectee']
+            self.config = json.loads(open(self.CONFIG_PATH).read())
+            self.collectee = self.config['auto-collect']['collectee']
             for s in self.collectee:
                 print s
 #        available options..
@@ -73,28 +73,46 @@ class AutoCollector:
         elems = self.driver.find_elements_by_css_selector(self.ROW_UNLOCK_CSS)
 #        print len(elems)
 
-        collect = []
+        config_dirty = False
+
+        former_input = ''
         for lock_icon in elems:
             tr = lock_icon.find_element_by_xpath('../..')
             team_name = tr.find_element_by_css_selector('td._mteamNo span').get_attribute('innerHTML')
             player_name = tr.find_element_by_css_selector('td._name strong').get_attribute('innerHTML')
             level = tr.find_element_by_css_selector('td._lv span').get_attribute('innerHTML')
+
+            is_level_over_3 = int(level.split(' ')[0]) > 3
 #            print '[', team_name, ']'
 #            print '[', player_name, ']'
 #            print '[', level, ']'
-            if team_name in self.collectee:
-                collect += [tr]
-                print 'collect [%s] %s(lv %s)'%(team_name, player_name, level)
+            if team_name in self.config['auto-collect']['collectee']:
+                print '\tCOLLECT [%s] %s(lv %s)'%(team_name, player_name, level)
+                self.driver.execute_script('console.log(arguments); arguments[0].click();', tr.find_element_by_css_selector('td._prttYn span.unlock'))
+            elif not is_level_over_3 and team_name in self.config['auto-collect']['non-collectee']:
+                print 'pass [%s] %s(lv %s)'%(team_name, player_name, level)
             else:
                 y_or_n = ''
-                while y_or_n.lower() not in ('y', 'n'):
+                while y_or_n.lower() not in ('y', 'yt', 'n', 'nt'):
                     y_or_n = raw_input('collect? [%s] %s(lv %s) [y/n]'%(team_name.encode('utf8'), player_name.encode('utf8'), level.encode('utf8')))
 
-                if y_or_n is 'y':
-                    collect += [tr]
-                    print 'collect [%s] %s(lv %s)'%(team_name, player_name, level)
-                else:
-                    pass # lock him.
+                    if y_or_n == '' and former_input != '':
+                        y_or_n = former_input
+                        print y_or_n
+
+                if y_or_n == 'yt':
+                    self.config['auto-collect']['collectee'] += [team_name]
+                    config_dirty = True
+
+                if y_or_n == 'nt':
+                    self.config['auto-collect']['non-collectee'] += [team_name]
+                    config_dirty = True
+
+                if y_or_n in ('y', 'yt'):
+                    print '\tCOLLECT [%s] %s(lv %s)'%(team_name, player_name, level)
+                    self.driver.execute_script('console.log(arguments); arguments[0].click();', tr.find_element_by_css_selector('td._prttYn span.unlock'))
+
+                former_input = y_or_n
 #            print tr.find_element_by_css_selector('td._name strong').get_attribute('innerHTML'),
 #            print tr.find_element_by_css_selector('td._curPos span').get_attribute('innerHTML'),
 #            print tr.find_element_by_css_selector('td._lv span').get_attribute('innerHTML'),
@@ -102,6 +120,11 @@ class AutoCollector:
 
 #        return when cleaning is done
 #        sell or practice as possible
+        if config_dirty:
+            import simplejson as json
+            f = open(self.CONFIG_PATH, 'w')
+            f.write(json.dumps(self.config, ensure_ascii=False, indent=4*' ').encode('utf8'))
+            f.close()
         pass
 
     def practice(self, growing_player, victims):
