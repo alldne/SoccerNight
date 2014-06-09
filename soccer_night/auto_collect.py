@@ -28,6 +28,8 @@ class AutoCollector:
         pass
     class PolicyExpired(Exception):
         pass
+    class NoPolicy(Exception):
+        pass
 
     BUTTON_1000_XPATH = '//li[@data-prodid="prplr_basic_lv1"]'
     BUTTON_AUTO_BUY_ID = 'auto_buy_button'
@@ -128,6 +130,12 @@ class AutoCollector:
             elif not is_level_over_3 and team_name in self.config['auto-collect']['non-collectee']:
                 print 'pass [%s] %s(lv %s)'%(team_name, player_name, level)
             else:
+                if self.config['auto-collect'].has_key('always-protect-over-level-3') and self.config['auto-collect']['always-protect-over-level-3']:
+                    log('always protect over level 3')
+                    print '\tCOLLECT [%s] %s(lv %s)'%(team_name, player_name, level)
+                    self.driver.execute_script('console.log(arguments); arguments[0].click();', tr.find_element_by_css_selector('td._prttYn span.unlock'))
+                    continue
+
                 y_or_n = ''
                 while y_or_n.lower() not in ('y', 'yt', 'n', 'nt'):
                     if is_level_over_3:
@@ -165,6 +173,20 @@ class AutoCollector:
             f.close()
         pass
 
+    def interpret_position(self, positions):
+        positions_copy = map(lambda s: s.lower(), positions)
+        position_map = {
+            'fw': ['st', 'lw', 'rw'],
+            'mf': ['lm', 'rm', 'cam', 'cm', 'cdm'],
+            'df': ['lb', 'rb', 'cb']
+        }
+
+        for p in positions_copy[:]:
+            if position_map.has_key(p):
+                positions_copy.pop(positions_copy.index(p))
+                positions_copy += position_map[p]
+        return positions_copy
+
     def practice_a_player(self, policy):
         log('practice player %s'%(policy['name'],))
         growing_player = policy['name']
@@ -173,16 +195,7 @@ class AutoCollector:
         victim_positions = map(lambda s: s.lower(), victim_positions)
         growth_type = policy.has_key('growth-type') and policy['growth-type'] or ''
 
-        position_map = {
-            'fw': ['st', 'lw', 'rw'],
-            'mf': ['lm', 'rm', 'cam', 'cm', 'cdm'],
-            'df': ['lb', 'rb', 'cb']
-        }
-
-        for p in victim_positions[:]:
-            if position_map.has_key(p):
-                victim_positions.pop(victim_positions.index(p))
-                victim_positions += position_map[p]
+        victim_positions = self.interpret_position(victim_positions)
 
         self.driver.get('http://fd.naver.com/gmc/main#partner')
         time.sleep(3)
@@ -290,9 +303,23 @@ class AutoCollector:
         growth_policy = self.config['auto-collect']['growth-policy']
         policies_copy = growth_policy[:]
         config_dirty = False
+        no_left_position = []
+
+        if not growth_policy:
+            raise AutoCollector.NoPolicy
+
         for p in growth_policy:
             try:
-                self.practice_a_player(p)
+                left = False
+#                print 'sold out: ', no_left_position, 'find: ', self.interpret_position(p['position-to-consume'])
+                for position in self.interpret_position(p['position-to-consume']):
+                    if position not in no_left_position:
+                        left = True
+                        break
+                if left:
+                    self.practice_a_player(p)
+                else:
+                    print 'Pass.. no left player to practice', p['name']
 
             except AutoCollector.PolicyExpired:
                 print 'Policy expired. Remove it from config.json.'
@@ -301,6 +328,7 @@ class AutoCollector:
 
             except AutoCollector.NoPlayersLeft as e:
                 print 'No players for %s to consume'%(p['name'],)
+                no_left_position += self.interpret_position(p['position-to-consume'])
             except AutoCollector.LevelUp as e:
                 beep()
                 beep(0.2)
@@ -383,4 +411,6 @@ if __name__ == '__main__':
                 time.sleep(3)
                 a.practice()
         except AutoCollector.ReachedMinimumGP:
-            print 'Reached minimum GP.. End'
+            print 'Reached minimum GP..%d End'%(self.config['auto-collect']['minimum-gp'],)
+        except AutoCollector.NoPolicy:
+            print 'No policy left.. End'
