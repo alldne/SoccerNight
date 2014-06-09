@@ -204,12 +204,16 @@ class AutoCollector:
         level = self.driver.execute_script("return $(arguments[0]).find('span.level')[0].className", elem)
         level = int(level.split(' ')[1].split('_')[0][2:])
 
-        if level >= target_level:
-            # TODO: print player info
-            raise AutoCollector.PolicyExpired
 
         self.driver.execute_script("arguments[0].click();", elem)
         time.sleep(2)
+
+        percentage = self.driver.execute_script("return $('span.graph_l')[0].style.width;")
+        percentage = float(percentage.replace('%', '')) / 100.0
+
+        if level + percentage >= target_level:
+            # TODO: print player info
+            raise AutoCollector.PolicyExpired
 
         if growth_type:
             growth = self.driver.execute_script("return $('dd#grow a.p_select:contains(%s)')[0];"%(growth_type.upper(),))
@@ -246,8 +250,14 @@ class AutoCollector:
                 time.sleep(0.5)
                 self.driver.execute_script("$('a#a_popup_ok')[0].click()")
                 time.sleep(2*len(victims))
+                percentage = self.driver.execute_script("return $('span.graph_l')[0].style.width;")
+                percentage = float(percentage.replace('%', '')) / 100.0
+                print 'level %f'%(level + percentage,)
                 if self.driver.execute_script("return $('div.lv_bonus_up')"):
                     raise AutoCollector.LevelUp
+
+                if level + percentage > target_level:
+                    raise AutoCollector.PolicyExpired
             else:
                 break
 
