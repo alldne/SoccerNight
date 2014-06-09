@@ -1,18 +1,8 @@
 {
     "pvp": true,
     "auto-collect": {
-        "collectee": [
-            "아틀레티코마드리드",
-            "피오렌티나",
-            "맨시티",
-            "바이에른 뮌헨",
-            "첼시",
-            "리버풀",
-            "바르셀로나",
-            "도르트문트",
-            "레알 마드리드"
-        ],
-        "auto-grind": true,
+        "minimum-gp": 1300000,
+        "always-protect-over-level-3": true,
         "non-collectee": [
             "함부르크",
             "아약스",
@@ -127,41 +117,89 @@
             "헤타페",
             "풀럼",
             "맨유",
-            "라치오"
+            "라치오",
+            "선더랜드",
+            "스포르팅",
+            "바스티아",
+            "헤르타 베를린",
+            "아스톤 빌라",
+            "아스날",
+            "나폴리",
+            "프라이부르크",
+            "아약스",
+            "프라이부르크",
+            "발렌시아"
         ],
         "growth-policy": [
             {
-                "growth-type": "LW",
-                "target-level": 8,
-                "position-to-consume": [
-                    "FW"
-                ],
-                "name": "다비드 비야"
-            },
-            {
-                "target-level": 8,
+                "target-level": 7.95,
                 "position-to-consume": [
                     "FW"
                 ],
                 "name": "디에고 코스타"
             },
             {
-                "target-level": 8,
+                "target-level": 7.95,
                 "position-to-consume": [
                     "MF"
                 ],
-                "name": "가비"
+                "name": "후안프란"
             },
             {
-                "target-level": 8,
+                "target-level": 7.95,
                 "position-to-consume": [
+                    "MF"
+                ],
+                "name": "코케"
+            },
+            {
+                "target-level": 7.95,
+                "position-to-consume": [
+                    "MF"
+                ],
+                "name": "M. 수아레즈"
+            },
+            {
+                "target-level": 7.95,
+                "position-to-consume": [
+                    "MF"
+                ],
+                "name": "라울 가르시아"
+            },
+            {
+                "target-level": 7.95,
+                "position-to-consume": [
+                    "FW",
+                    "MF",
                     "DF",
                     "GK"
                 ],
-                "name": "디에고 고딘"
+                "name": "알데르베이럴트"
+            },
+            {
+                "target-level": 7.95,
+                "position-to-consume": [
+                    "FW",
+                    "MF",
+                    "DF",
+                    "GK"
+                ],
+                "name": "호세 히메네스"
             }
         ],
-        "minimum-gp": 1300000
+        "auto-grind": true,
+        "collectee": [
+            "아틀레티코마드리드",
+            "피오렌티나",
+            "맨시티",
+            "바이에른 뮌헨",
+            "첼시",
+            "리버풀",
+            "바르셀로나",
+            "도르트문트",
+            "레알 마드리드",
+            "유벤투스"
+        ]
     },
     "id": "alldne"
 }
